@@ -2,16 +2,16 @@ clc;
 clear all;
 
 %% Input Data.....
-tic;
+
 rr=1;              % alpha.....
-tau=-0.05;           % scaling for continuation.......
+tau=-0.2;           % scaling for continuation.......
 scale=1;           % scaling for Ql.........
 
 %% Input data got from first freeing only Pl as free parameter.....
 
-V2=0.5;         % V2........
+V2=0.5;                % V2........
 alpha=6.8661e-04;      % Alpha........
-Lambda=-1.0034;   % Lambda 1.....
+Lambda=-1.0034;        % Lambda 1.....
 
 %% 
 
@@ -31,7 +31,7 @@ z1=[alpha;V2;Lambda;hat_Lambda];
 %% Power balance........
 
 Pl=0.1;
-Ql=scale*(-0.25);
+Ql=(-0.25);
 
 Ldfactor=1;
 
@@ -52,7 +52,12 @@ Lambda=Lambda+tau*tang_vector(3,1);
 hat_Lambda=hat_Lambda+tau*tang_vector(4,1);
 
 
-zp=[alpha;V2;Lambda;hat_Lambda];
+%zp=[0.0007;0.4875;-1.0034;0.9500];
+
+
+zxx=[alpha;V2;Lambda;hat_Lambda];
+
+
 %zp=z1+tau*tang_vector;                      % Predicted step on the boundry ..........
 
 
@@ -66,9 +71,12 @@ while (Tole > 1e-6)
     ff1=((V2*sin(alpha)))+Pl*(1+Ldfactor*Lambda);
     ff2=(((V2^2) -V2*cos(alpha)))- hat_Lambda*Ql*(1);
     ff3=2*V2^2 *cos(alpha) -V2;
-    ff4=(zp-zp)'*tang_vector-0.0;
+    ff4=(zxx-z1)'*tang_vector-tau;
+
     
-    Ext_Jacob=[V2*cos(alpha) sin(alpha) Pl*Ldfactor 0; V2*sin(alpha)  2*V2-cos(alpha) 0 -Ql; -2*(V2^2)*sin(alpha) (4*V2*cos(alpha))-1 0 0;tang_vector'];
+    %norm(zxx-z1)^2-0.06;
+        
+    Ext_Jacob=[V2*cos(alpha) sin(alpha) Pl*Ldfactor 0; V2*sin(alpha)  2*V2-cos(alpha) 0 -Ql; -2*(V2^2)*sin(alpha) (4*V2*cos(alpha))-1 0 0;2*(zxx(1,1)-tang_vector(1,1)) 2*(zxx(2,1)-tang_vector(2,1)) 2*(zxx(3,1)-tang_vector(3,1)) 2*(zxx(4,1)-tang_vector(4,1))];
    
     
     dM=[ff1;ff2;ff3;ff4];
@@ -101,33 +109,17 @@ Tole_corr(Iterr)=Tole;
 Iterr = Iterr + 1;
     Tolee=max(abs(scale));  
     counterr = counterr + 1;
-    if counterr ==80;
+    if counterr ==40;
         break;
     end    
 end
 
-LL1=[0 -Lambda1];
-VV1=[0.5 VV2];
+LL=[-Lambda1 0 Lambda1];
+VV=[VV2 0.5 VV2];
 
-LL2=[0 Lambda1];
-VV3=[0.5 VV2];
-
-%% Analytical solution of Outer Boundary of Solution Space......
-
-Q_f=-0.25:0.1:0.7;
-P_f=sqrt(1+4*Q_f)/2;
-V_f=sqrt((2*Q_f+1)/2);
-
-plot(LL1,VV1,LL2,VV3,P_f,V_f,'*',-P_f,V_f,'+')
-title('Solution space P-V plane, Q as free parameter');
-xlabel('P (MW, pu)');
-ylabel('V (pu)');
-legend('','','Analytical','Analytical')
-ylim([-Inf Inf])
+plot(LL,VV,'+')
+%plot(Lambda1,VV2,'+')
 xlim([-Inf Inf])
-set(gcf,'PaperUnits','inches','PaperPosition',[0 0 4 3])
+ylim([-inf Inf])
 
-print -djpeg filename.jpg -r600
-
-toc;
 
